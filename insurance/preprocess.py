@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd  # import pandas
-# import os
 from sklearn import preprocessing
 # from scipy.sparse import csr_matrix
 # from sklearn.preprocessing import LabelEncoder
@@ -10,9 +9,9 @@ from scipy.sparse import csr_matrix
 
 def preprocess_data():
     train_df_insurance = pd.read_csv('/home/reeta/Desktop/Machine_learning_1260/home_insurance_quote_flag/train.csv')
-    train_df_insurance = train_df_insurance.drop('QuoteNumber', axis=1)
 
-# Find correlation between features and drop the one of two highly correlated one
+    # Data Exploration:
+    # Find correlation between features and drop the one of two highly correlated one
     def highly_corr_col(abc):
         corr_matrix = train_df_insurance[abc].corr().abs()
         upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
@@ -45,8 +44,8 @@ def preprocess_data():
     # Drop 'Date' feature
     train_df_insurance = train_df_insurance.drop('Date', axis=1)
 
+    # CHECK MISSING DATA:
     # Fill Missing Nan Value For Categorical Columns With 'unknown' and other -1:
-    # CHECK MISSING DATA
     # Let us organize above table and sort the table in terms of # of NAN in descending order
     nan_info = pd.DataFrame(train_df_insurance.isnull().sum()).reset_index()
     nan_info.columns = ['feature_name', 'nan_cnt']
@@ -60,6 +59,7 @@ def preprocess_data():
                 f not in ['QuoteConversion_Flag']]  # you have to customize this according to your own needs
 
     # print(features)
+
     def enc(c):
         le = preprocessing.LabelEncoder()
         le.fit(list(c.values))
@@ -71,7 +71,7 @@ def preprocess_data():
             train_df_insurance[ft].fillna('unknown', inplace=True)
         else:
             train_df_insurance[ft].fillna(-1, inplace=True)
-        # print(df[ft])
+        # print(train_df_insurance[ft])
 
         # Using Label encoder
         enc(train_df_insurance[ft])
@@ -90,15 +90,13 @@ def preprocess_data():
             category_features.append(each)
     for each in category_features:
         train_df_insurance[each] = train_df_insurance[each].astype('category')
-        # df_cat.append(each)
-        # print(df[each])
+        # print(train_df_insurance[each])
         enc(train_df_insurance[each])
         f_cat.append(each)
     # category_features
     x = csr_matrix(pd.get_dummies(train_df_insurance[f_cat], drop_first=True, prefix=f_cat, sparse=True)).tocsr()
 
-
-# split the data by train test split
+    # split the data by train test split
     x = x.toarray()
     y = train_df_insurance['QuoteConversion_Flag'].values
     x_train, x_test, y_train, y_test = train_test_split(x, y, shuffle=True, random_state=10, test_size=0.1)
